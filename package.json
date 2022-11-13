@@ -1,6 +1,6 @@
 {
 	"name": "@thundercraft5/mixin.js",
-	"description": "A library for enabling/easing the use of mixins/traits in JS.",
+	"description": "A zero-dependency lightweight performant library for creating mixins/traits in JS/TS.",
 	"author": "Thundercraft5",
 	"license": "BSD-3-Clause",
 	"version": "1.1.0",
