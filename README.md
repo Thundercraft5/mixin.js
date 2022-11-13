@@ -1,5 +1,5 @@
 ## `mixin.js` 
-`mixin.js` is a zero-dependancy lightweight library written in TypeScript that helps you implement mixins in JS/TS.
+`mixin.js` is a zero-dependancy lightweight library written in TypeScript that helps you implement mixins in JS/TS on any runtime.
 
 ## What does this do?
 This library creates mixin classes via proxies, which are special classes which also index the mixin classes before deferring to the base class for resolution.
