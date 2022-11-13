@@ -3,7 +3,7 @@
 	"description": "A zero-dependency lightweight performant library for creating mixins/traits in JS/TS.",
 	"author": "Thundercraft5",
 	"license": "BSD-3-Clause",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"type": "module",
 	"keywords": [
 		"mixin",
