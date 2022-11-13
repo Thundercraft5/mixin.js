@@ -1,0 +1,14 @@
+{
+	"extends": "@thundercraft5/tsconfig/node18.tsconfig.json",
+	"compilerOptions": {
+		"module": "ESNext",
+		"declarationDir": "dist/types",
+		"emitDecoratorMetadata": false
+	},
+	"include": [
+		"**/*.ts"
+	],
+	"exclude": [
+		"node_modules"
+	]
+}

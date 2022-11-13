@@ -1,0 +1,92 @@
+{
+	"name": "@thundercraft5/mixin.js",
+	"description": "A library for enabling/easing the use of mixins/traits in JS.",
+	"author": "Thundercraft5",
+	"license": "BSD-3-Clause",
+	"version": "1.0.0",
+	"type": "module",
+	"keywords": [
+		"mixin",
+		"traits",
+		"multiple",
+		"inheritance",
+		"utils",
+		"class",
+		"constructors"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/thundercraft5/mixin.js.git"
+	},
+	"bugs": {
+		"url": "https://github.com/thundercraft5/mixin.js/issues"
+	},
+	"homepage": "https://github.com/thundercraft5/mixin.js#readme",
+	"scripts": {
+		"prepublishOnly": "npm run build",
+		"build": "npm-run-all clean build:*",
+		"build:esm": "esbuild ./src/index.ts --outfile=dist/esm/index.mjs --bundle --format=esm --platform=browser",
+		"build:cjs": "esbuild ./src/index.ts --outfile=dist/cjs/index.cjs --bundle --format=cjs --platform=browser",
+		"build:types": "tsc ./src/index.ts --emitDeclarationOnly --declaration --declarationMap --declarationDir ./dist/types",
+		"clean": "del-cli ./dist"
+	},
+	"types": "./dist/types/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/esm/index.mjs",
+			"require": "./dist/cjs/index.cjs"
+		}
+	},
+	"devDependencies": {
+		"@thundercraft5/eslint-plugin": "file:../eslint-plugin",
+		"@thundercraft5/mixin.js": "file:",
+		"@thundercraft5/tsconfig": "file:../tsconfig",
+		"@thundercraft5/type-utils": "file:../type-utils",
+		"@types/fs-extra": "9.0.13",
+		"del-cli": "5.0.0",
+		"esbuild": "0.15.13",
+		"eslint": "8.25.0",
+		"eslint-import-resolver-typescript": "3.5.1",
+		"eslint-plugin-eslint-comments": "3.2.0",
+		"eslint-plugin-import": "2.26.0",
+		"fs-extra": "10.1.0",
+		"npm-run-all": "4.1.5",
+		"ts-node": "10.9.1",
+		"typescript": "5.0.0-dev.20221108"
+	},
+	"eslintConfig": {
+		"root": true,
+		"ignorePatterns": "**/*.d.ts",
+		"overrides": [
+			{
+				"extends": "plugin:@thundercraft5/typescript",
+				"files": "**/*.ts",
+				"parserOptions": {
+					"project": "./tsconfig.json",
+					"tsconfigRootDir": "./"
+				},
+				"settings": {
+					"import/parsers": {
+						"@typescript-eslint/parser": [
+							".ts",
+							".tsx"
+						]
+					}
+				},
+				"rules": {
+					"@thundercraft5/consistent-type-imports": "warn",
+					"@typescript-eslint/consistent-type-imports": "warn",
+					"nonblock-statement-body-position": [
+						"warn",
+						"below"
+					]
+				}
+			}
+		]
+	},
+	"dependencies": {
+		"@swc/core": "1.3.14",
+		"ts-node-dev": "2.0.0"
+	}
+}
