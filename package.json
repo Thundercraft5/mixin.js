@@ -3,7 +3,7 @@
 	"description": "A zero-dependency lightweight performant library for creating mixins/traits in JS/TS.",
 	"author": "Thundercraft5",
 	"license": "BSD-3-Clause",
-	"version": "1.1.4",
+	"version": "1.1.5",
 	"type": "module",
 	"keywords": [
 		"mixin",
@@ -25,11 +25,13 @@
 	"scripts": {
 		"prepublishOnly": "npm run build",
 		"build": "npm-run-all clean build:*",
-		"build:esm": "esbuild ./src/index.ts --outfile=dist/esm/index.mjs --bundle --format=esm --platform=browser",
-		"build:cjs": "esbuild ./src/index.ts --outfile=dist/cjs/index.cjs --bundle --format=cjs --platform=browser",
+		"build:esm": "esbuild ./src/index.ts --outfile=dist/esm/index.mjs --sourcemap --bundle --format=esm --platform=browser",
+		"build:cjs": "esbuild ./src/index.ts --outfile=dist/cjs/index.cjs --sourcemap --bundle --format=cjs --platform=browser",
 		"build:types": "tsc ./src/index.ts --emitDeclarationOnly --declaration --declarationMap --declarationDir ./dist/types",
 		"clean": "del-cli ./dist"
 	},
+	"main": "./dist/cjs/index.cjs",
+	"module": "./dist/esm/index.mjs",
 	"types": "./dist/types/index.d.ts",
 	"exports": {
 		".": {
@@ -55,6 +57,9 @@
 		"ts-node": "10.9.1",
 		"typescript": "5.0.0-dev.20221108"
 	},
+	"files": [
+		"dist"
+	],
 	"eslintConfig": {
 		"root": true,
 		"ignorePatterns": "**/*.d.ts",
