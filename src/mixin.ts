@@ -1,13 +1,42 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, func-style, unicorn/consistent-function-scoping, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-use-before-define, @typescript-eslint/no-redeclare */
-import { mixinPrototypeMap, staticMixinMap, staticMixinProtoMap } from "./weakMaps";
-import { SymbolMixinConstruct, SymbolMixinPrototype } from "./symbols";
+import { mixinClassMap, mixinPrototypeMap, staticMixinProtoMap } from "./weakMaps";
+import { SymbolIsMixinClass, SymbolIsMixinPrototype, SymbolMixinClasses, SymbolMixinConstruct } from "./symbols";
 
 import { makeInstanceOf } from "./utils";
 
-import type { Class } from "@thundercraft5/type-utils";
+import type { Any, Class, ExtractExact } from "@thundercraft5/type-utils";
 import type { AbstractConstructor } from "@thundercraft5/type-utils/constructors";
-import type { MixinClass } from "./types";
+import type { GenericMixinClass, MixinClass } from "./types";
+import type { ConditionalKeyExclude, ConditionalKeys, OmitByValue, ValueOf } from "@thundercraft5/type-utils/objects";
 
+/**
+ * Checks if {@linkcode key} is a special key in a mixin class.
+ * 
+ * @param key The key to check
+ * @returns A boolean if the key is special
+ */
+function isSpecialMixinKey(key: any): key is typeof Symbol.hasInstance | typeof SymbolIsMixinClass | "prototype" {
+	return key === SymbolIsMixinClass || key === Symbol.hasInstance || key === "prototype";
+}
+
+/**
+ * Checks if {@linkcode key} is a special key in a mixin class prototype.
+ * 
+ * @param key The key to check
+ * @returns A boolean if the key is special
+ */
+function isSpecialMixinProtoKey(key: any): key is typeof Symbol.toStringTag | typeof SymbolIsMixinPrototype | typeof SymbolMixinClasses {
+	return key === SymbolIsMixinPrototype || key === Symbol.toStringTag || key === SymbolMixinClasses;
+}
+
+function makeImmutableDescriptor<T>(value: T) {
+	return {
+		value,
+		writable: false,
+		enumerable: false,
+		configurable: false,
+	} as const;
+}
 
 /** 
  * Creates a mixin class with {@linkcode Base} as the base, with {@linkcode classes} as mixins.
@@ -25,8 +54,8 @@ import type { MixinClass } from "./types";
 export function GenericMixin<
 	Base extends AbstractConstructor,
 	Classes extends Class[] = [],
->(Base: Base, ...classes: [...Classes]): Base & { readonly [Symbol.mixin]: true } {
-	return Mixin(Base, ...classes);
+>(Base: Base, ...classes: [...Classes]) {
+	return Mixin(Base, ...classes) as GenericMixinClass<Base, Classes>;
 }
 
 /**
@@ -56,10 +85,12 @@ export function Mixin<
 
 	/**
 	 * Create a mixin class, which is acts as a intermediary between the child and base class and mixins
-	 * Mixins have [Symbol.hasInstance]() builtin to them alongside a property called [Symbol.mixin] that identifies it as a base mixin proxy
+	 * Mixins have {@linkcode Symbol.hasInstance} method builtin to them alongside a property called Symbol.isMixinClass] that identifies it as a base mixin proxy
 	 */
 	const mixinClass = new Proxy(baseMixin, {
 			get(target, key) {
+				if (key === SymbolIsMixinClass)
+					return true;
 				if (key === Symbol.hasInstance)
 					return instanceOf;
 
@@ -69,30 +100,28 @@ export function Mixin<
 			},
 
 			set(target, key, value) {
-				if (key === "prototype" || key === Symbol.hasInstance)
+				if (isSpecialMixinKey(key))
 					return false;
 
 				return Reflect.set(target, key, value);
 			},
 
 			has(target, key) {
-				if (key === "prototype")
-					return true;
-				if (key === Symbol.hasInstance)
+				if (isSpecialMixinKey(key))
 					return true;
 
 				return Reflect.has(target, key);
 			},
 
 			deleteProperty(target, key) {
-				if (key === Symbol.hasInstance)
+				if (isSpecialMixinKey(key))
 					false;
 
 				return Reflect.deleteProperty(target, key);
 			},
 
 			defineProperty(target, key, attributes) {
-				if (key === Symbol.hasInstance)
+				if (isSpecialMixinKey(key))
 					return false;
 
 				return Reflect.defineProperty(target, key, attributes);
@@ -117,21 +146,11 @@ export function Mixin<
 			},
 
 			getOwnPropertyDescriptor(target, key) {
-				if (key === Symbol.hasInstance)
-					return {
-						value: instanceOf,
-						writable: false,
-						enumerable: false,
-						configurable: false,
-					};
-				if (key === "prototype")
-					return {
-						value: mixinPrototypeObject,
-						writable: false,
-						enumerable: false,
-						configurable: false,
-					};
-
+				switch (key) {
+					case "prototype": return makeImmutableDescriptor(mixinPrototypeObject);
+					case Symbol.hasInstance: return makeImmutableDescriptor(instanceOf);
+					case Symbol.isMixinClass: return makeImmutableDescriptor(true);
+				}
 
 				return Reflect.getOwnPropertyDescriptor(target, key);
 			},
@@ -166,10 +185,10 @@ export function Mixin<
 		instanceOf = makeInstanceOf(mixinClass);
 
 	mixinPrototypeMap.set(baseProtoObject, basePrototype);
-	/** Mixin prototypes have a property called [Symbol.mixinPrototype] to indicate if they are mixin prototype proxies */
+	/** Mixin prototypes have a property called {@linkcode Symbol.isMixinPrototype} to indicate if they are mixin prototype proxies */
 	const mixinPrototypeObject = new Proxy(baseProtoObject, {
 		get(target, key) {
-			if (key === SymbolMixinPrototype)
+			if (key === SymbolIsMixinPrototype)
 				return true;
 			if (key === Symbol.toStringTag)
 				return Base.name ?? basePrototype[Symbol.toStringTag];
@@ -179,7 +198,7 @@ export function Mixin<
 				return Reflect.get(target, key);
 
 			// Mixin methods take precedence over base classes
-			for (const Class of classes)
+			for (const Class of mixinClassMap.get(target) as Set<Classes[number]>)
 				if (Reflect.has(Class.prototype, key))
 					return Reflect.get(Class.prototype, key);
 
@@ -188,18 +207,18 @@ export function Mixin<
 		},
 
 		set(target, key, value) {
-			if (key === Symbol.toStringTag || key === SymbolMixinPrototype)
+			if (isSpecialMixinProtoKey(key))
 				return false;
 
 			return Reflect.set(target, key, value);
 		},
 
 		has(target, key) {
-			if (key === Symbol.toStringTag || key === SymbolMixinPrototype)
+			if (isSpecialMixinProtoKey(key))
 				return true;
 
 			// Mixin methods take precedence over base classes
-			for (const Class of classes)
+			for (const Class of mixinClassMap.get(target) as Set<Classes[number]>)
 				if (Reflect.has(Class.prototype, key))
 					return true;
 
@@ -208,14 +227,14 @@ export function Mixin<
 		},
 
 		defineProperty(target, key, attributes) {
-			if (key === Symbol.hasInstance || key === SymbolMixinPrototype)
+			if (isSpecialMixinProtoKey(key))
 				return false;
 
 			return Reflect.defineProperty(target, key, attributes);
 		},
 
 		deleteProperty(target, key) {
-			if (key === Symbol.toStringTag || key === SymbolMixinPrototype)
+			if (isSpecialMixinProtoKey(key))
 				return false;
 
 			return Reflect.deleteProperty(target, key);
@@ -237,12 +256,63 @@ export function Mixin<
 			return Reflect.preventExtensions(target);
 		},
 
-		getOwnPropertyDescriptor(target, property) {
-			return Reflect.getOwnPropertyDescriptor(target, property);
+		getOwnPropertyDescriptor(target, key) {
+			switch (key) {
+				case Symbol.toStringTag: return makeImmutableDescriptor(Base.name ?? basePrototype[Symbol.toStringTag]);
+			}
+
+			return Reflect.getOwnPropertyDescriptor(target, key);
 		},
 	});
 
-	staticMixinMap.set(mixinClass, new WeakSet());
+	mixinClassMap.set(baseMixin, new Set(classes));
+	mixinClassMap.set(basePrototype, new Set(classes));
 
 	return mixinClass as MixinClass<Base, Classes>;
 }
+
+class E {
+	test() {}
+}
+
+class B<E> {
+	test2() {}
+}
+
+new class C extends Mixin(B, E)<C> {
+	constructor() {
+		super();
+
+		this.test2();
+	}
+}();
+type Extends<A, B, C = A> = A extends B ? C : never;
+type $3 = 0 extends unknown ? 1 : 0;
+const types = typeof (null as any);
+type Types = typeof types;
+type FromUnknown<T> = ExtractExact<T, unknown> extends T ? Any : never;
+type Typeof<T> = ConditionalKeyExclude<{
+	"number": Extends<T, number>;
+	"bigint": Extends<T, bigint>;
+	"string": Extends<T, string>;
+	"object": Extends<T, object | null>;
+	"undefined": Extends<T, undefined>;
+	"boolean": Extends<T, boolean>;
+	"function": Extends<T, Function>;
+	"symbol": Extends<T, symbol>;
+}, never>;
+type ToObject<O> = [
+	Extends<O, number, Number>,
+	Extends<O, bigint, BigInt>,
+	Extends<O, string, String>,
+	Extends<O, object>,
+	Extends<O, null | undefined, {}>,
+	Extends<O, Function, O>,
+	Extends<O, symbol, Symbol>,
+	
+][number];
+type $2 = FromUnknown<unknown>;
+
+const $2 = new Object(1);
+
+declare,  $3: unknown;

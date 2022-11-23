@@ -25,10 +25,15 @@
 	"scripts": {
 		"prepublishOnly": "npm run build",
 		"build": "npm-run-all clean build:*",
-		"build:esm": "esbuild ./src/index.ts --outfile=dist/esm/index.mjs --sourcemap --bundle --format=esm --platform=browser",
-		"build:cjs": "esbuild ./src/index.ts --outfile=dist/cjs/index.cjs --sourcemap --bundle --format=cjs --platform=browser",
+		"esbuild": "esbuild ./src/index.ts --platform=node --sourcemap --bundle --platform=browser",
+		"build:esm": "npm run esbuild -- --outfile=dist/esm/index.mjs --format=esm",
+		"build:cjs": "npm run esbuild -- --outfile=dist/cjs/index.cjs --format=cjs",
 		"build:types": "tsc ./src/index.ts --emitDeclarationOnly --declaration --declarationMap --declarationDir ./dist/types",
-		"clean": "del-cli ./dist"
+		"clean": "del-cli ./dist",
+		"watch:cjs": "npm run build:cjs -- --watch",
+		"watch:esm": "npm run build:esm -- --watch",
+		"watch:types": "npm run build:types -- -w -i --tsBuildInfoFile ./.tsbuildinfo",
+		"watch": "npm-run-all -p watch:*"
 	},
 	"main": "./dist/cjs/index.cjs",
 	"module": "./dist/esm/index.mjs",

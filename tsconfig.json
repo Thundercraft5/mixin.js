@@ -3,12 +3,14 @@
 	"compilerOptions": {
 		"module": "ESNext",
 		"declarationDir": "dist/types",
-		"emitDecoratorMetadata": false
+		"emitDecoratorMetadata": false,
+		"noEmitOnError": false
 	},
 	"include": [
 		"**/*.ts"
 	],
 	"exclude": [
-		"node_modules"
+		"node_modules",
+		"dist"
 	]
 }
