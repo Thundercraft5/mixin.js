@@ -1,13 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access, func-style, unicorn/consistent-function-scoping, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-use-before-define, @typescript-eslint/no-redeclare */
-import { mixinClassMap, mixinPrototypeMap, staticMixinProtoMap } from "./weakMaps";
-import { SymbolIsMixinClass, SymbolIsMixinPrototype, SymbolMixinClasses, SymbolMixinConstruct } from "./symbols";
-
-import { makeInstanceOf } from "./utils";
-
-import type { Any, Class, ExtractExact } from "@thundercraft5/type-utils";
+import type { Class } from "@thundercraft5/type-utils";
 import type { AbstractConstructor } from "@thundercraft5/type-utils/constructors";
+
+import { SymbolIsMixinClass, SymbolIsMixinPrototype, SymbolMixinClasses, SymbolMixinConstruct } from "./symbols";
 import type { GenericMixinClass, MixinClass } from "./types";
-import type { ConditionalKeyExclude, ConditionalKeys, OmitByValue, ValueOf } from "@thundercraft5/type-utils/objects";
+import { makeInstanceOf } from "./utils";
+import { mixinClassMap, mixinPrototypeMap, staticMixinProtoMap } from "./weakMaps";
 
 /**
  * Checks if {@linkcode key} is a special key in a mixin class.
@@ -270,49 +268,3 @@ export function Mixin<
 
 	return mixinClass as MixinClass<Base, Classes>;
 }
-
-class E {
-	test() {}
-}
-
-class B<E> {
-	test2() {}
-}
-
-new class C extends Mixin(B, E)<C> {
-	constructor() {
-		super();
-
-		this.test2();
-	}
-}();
-type Extends<A, B, C = A> = A extends B ? C : never;
-type $3 = 0 extends unknown ? 1 : 0;
-const types = typeof (null as any);
-type Types = typeof types;
-type FromUnknown<T> = ExtractExact<T, unknown> extends T ? Any : never;
-type Typeof<T> = ConditionalKeyExclude<{
-	"number": Extends<T, number>;
-	"bigint": Extends<T, bigint>;
-	"string": Extends<T, string>;
-	"object": Extends<T, object | null>;
-	"undefined": Extends<T, undefined>;
-	"boolean": Extends<T, boolean>;
-	"function": Extends<T, Function>;
-	"symbol": Extends<T, symbol>;
-}, never>;
-type ToObject<O> = [
-	Extends<O, number, Number>,
-	Extends<O, bigint, BigInt>,
-	Extends<O, string, String>,
-	Extends<O, object>,
-	Extends<O, null | undefined, {}>,
-	Extends<O, Function, O>,
-	Extends<O, symbol, Symbol>,
-	
-][number];
-type $2 = FromUnknown<unknown>;
-
-const $2 = new Object(1);
-
-declare,  $3: unknown;
