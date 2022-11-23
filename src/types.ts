@@ -1,4 +1,8 @@
 /* eslint-disable @typescript-eslint/sort-type-union-intersection-members */
+import { SymbolMixinConstruct } from "./symbols";
+
+import type { SymbolIsMixinClass, SymbolIsMixinPrototype, SymbolMixinClasses } from "./symbols";
+
 import type { Class } from "@thundercraft5/type-utils";
 import type { ReverseTuple, TupleToIntersection } from "@thundercraft5/type-utils/arrays";
 import type { AbstractConstructor } from "@thundercraft5/type-utils/constructors";
@@ -15,9 +19,6 @@ type OmitConstructor<C> = C extends AbstractFunction<infer R, infer A> ? Abstrac
 type Instances<O extends any[]> = O extends [infer C extends AbstractConstructor, ...infer R]
 	? [C extends AbstractConstructor<infer T> ? T : never, ...Proto<R>]
 	: [];
-type KeyofExcept<O, E> = Exclude<keyof O, E>;
-
-type GetNew<O> = O extends { new: infer N } ? N : never;
 
 /**
  * Converts a Base class and other classes into a mixin class
@@ -31,37 +32,42 @@ type GetNew<O> = O extends { new: infer N } ? N : never;
 export type MixinClass<Base extends Class, Classes extends Class[]> =
 	& {
 		new(...args: any[]): TupleToIntersection<ReverseTuple<[...Instances<Classes>]>>;
+		readonly [SymbolIsMixinClass]: true;
+		readonly [SymbolMixinClasses]: Classes;
 		prototype: TupleToIntersection<ReverseTuple<[...Instances<Classes>]>> & InstanceType<Base> & {
-			readonly [Symbol.mixinPrototype]: true;
+			readonly [SymbolIsMixinPrototype]?: true;
 		};
 	}
 	& OmitConstructor<TupleToIntersection<ReverseTuple<[...Classes]>>>
-	& Base
-	& {
-		readonly [Symbol.mixin]: true;
-	};
+	& Base;
 
-// Workaround for classes that have generics, generics are created via declaration merging in classes
-export type GenericMixinClass<Base extends Class, Class extends Class[]> = Base & { readonly [Symbol.mixin]: true } & {
-	prototype: {
-		readonly [Symbol.mixinPrototype]: true;
+/**
+ * Workaround type for classes that have generics, generic instance types are added via declaration merging in classes
+ * @see {@linkcode MixinClass}
+ */
+export type GenericMixinClass<Base extends Class, Classes extends Class[]> = Base & {
+	readonly [SymbolIsMixinClass]: true;
+	readonly [SymbolMixinClasses]: Classes;
+	prototype: TupleToIntersection<ReverseTuple<[...Instances<Classes>]>> & InstanceType<Base> & {
+		readonly [SymbolIsMixinPrototype]: true;
 	};
-};
+} & OmitConstructor<TupleToIntersection<ReverseTuple<[...Classes]>>>;
 
 export type IsMixinClassObject<C extends Class = Class> = C extends Class & {
-	readonly [Symbol.mixin]: true;
+	readonly [SymbolIsMixinClass]: true;
 	prototype: {
-		readonly [Symbol.mixinPrototype]: true;
+		readonly [SymbolIsMixinPrototype]: true;
 	};
 } ? C : never;
 export type IsMixinPrototype<P> = P extends {
-	readonly [Symbol.mixinPrototype]: true;
+	readonly [SymbolIsMixinClass]: true;
 } ? P : never;
+export type HasMixinClass<M extends MixinClassObject, C extends Class> = M;
 export type MixinPrototype<M extends Class> = M extends IsMixinClassObject<M> ? M["prototype"] : never;
 export type MixinClassObject = Class & {
-	readonly [Symbol.mixin]: true;
+	readonly [SymbolIsMixinClass]: true;
 	prototype: {
-		readonly [Symbol.mixinPrototype]: true;
+		readonly [SymbolIsMixinPrototype]: true;
 	};
 };
-export type MixinConstructable = Class & { [Symbol.mixinConstruct]?(...args: any[]): any };
+export type MixinConstructable = Class & { [SymbolMixinConstruct]?(...args: any[]): any };
