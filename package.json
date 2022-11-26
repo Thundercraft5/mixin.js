@@ -3,7 +3,7 @@
 	"description": "A zero-dependency lightweight performant library for creating mixins/traits in JS/TS.",
 	"author": "Thundercraft5",
 	"license": "BSD-3-Clause",
-	"version": "1.3.2",
+	"version": "1.3.3",
 	"type": "module",
 	"keywords": [
 		"mixin",
@@ -28,7 +28,7 @@
 		"esbuild": "esbuild ./src/index.ts --platform=node --sourcemap --bundle --platform=browser",
 		"build:esm": "npm run esbuild -- --outfile=dist/esm/index.mjs --format=esm",
 		"build:cjs": "npm run esbuild -- --outfile=dist/cjs/index.cjs --format=cjs",
-		"build:types": "tsc",
+		"build:types": "tsc -b -f",
 		"clean": "del-cli ./dist",
 		"watch:cjs": "npm run build:cjs -- --watch",
 		"watch:esm": "npm run build:esm -- --watch",
