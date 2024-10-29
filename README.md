@@ -7,3 +7,9 @@ This library has full TS support *with generics* via declaration merging.
 
 ## Usage
 **TODO**
+
+## Roadmap
+- [ ] Implement a `static [SymbolMixinApply](Class)`  to allow for static class access of the mixin
+- [ ] Allow for static access of the mixin list via `Class.mixins` with a `ReadonlyIterableWeakMap` to allow for introspection and debugging (readonly for security)
+- [ ] Decorators: Add decorator pattern support for mixins
+- [ ] Check for memory leaks and use weak maps and sets where required
