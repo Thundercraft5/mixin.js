@@ -1,3 +1,7 @@
+---
+Created: 2024-10-29T18:14
+Edited: 2024-10-29T18:14
+---
 ## 🎛️ `mixin.js`
 `mixin.js` is a zero-dependancy lightweight library written in TypeScript that helps you implement mixins in JS/TS on any runtime.
 
